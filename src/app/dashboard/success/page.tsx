@@ -1,13 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { CheckCircle, ArrowRight, Users, TrendingUp, DollarSign } from "lucide-react"
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
   const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(true)
 
@@ -100,5 +100,22 @@ export default function PaymentSuccessPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#F7F5F3] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 bg-[#1A73E8] rounded-lg flex items-center justify-center mx-auto mb-4">
+            <span className="text-white font-bold text-sm">G</span>
+          </div>
+          <p className="text-[#605A57]">Loading...</p>
+        </div>
+      </div>
+    }>
+      <PaymentSuccessContent />
+    </Suspense>
   )
 }
