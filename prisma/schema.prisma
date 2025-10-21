@@ -1,0 +1,90 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id                String   @id @default(cuid())
+  name              String
+  ownerId           String
+  ownerEmail        String
+  status            String   @default("active") // active, paused, suspended
+  balance           Float    @default(0)
+  stripeCustomerId  String?
+  niche             String?  // locksmith, towing, cleaning, etc.
+  serviceArea       String?  // city/state
+  leadVolume        Int?     // leads per day
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Relations
+  members           Member[]
+  leads             Lead[]
+  payments          Payment[]
+  
+  @@map("organizations")
+}
+
+model Member {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String
+  email          String
+  role           String   // owner, admin, manager, technician
+  createdAt      DateTime @default(now())
+  
+  // Relations
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  assignedLeads  Lead[]       @relation("AssignedTo")
+  
+  @@unique([organizationId, userId])
+  @@map("members")
+}
+
+model Lead {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  phone          String
+  email          String?
+  description    String
+  address        String
+  city           String
+  state          String
+  zipCode        String?
+  status         String   @default("new") // new, assigned, contacted, converted, lost
+  assignedToId   String?
+  price          Float    @default(20) // per-lead price
+  source         String?  // google_ads, manual, webhook
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  // Relations
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  assignedTo     Member?       @relation("AssignedTo", fields: [assignedToId], references: [id])
+  
+  @@map("leads")
+}
+
+model Payment {
+  id             String   @id @default(cuid())
+  organizationId String
+  stripePaymentId String
+  amount         Float
+  type           String   // activation, lead_charge
+  description    String
+  status         String   // succeeded, failed, pending
+  createdAt      DateTime @default(now())
+  
+  // Relations
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  @@map("payments")
+}
